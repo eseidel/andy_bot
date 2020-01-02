@@ -1,0 +1,5 @@
+name: andy_bot
+dependencies:
+  a_star:
+    # git: git@github.com:eseidel/dart-a-star.git
+    path: ../dart-a-star
