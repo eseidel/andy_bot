@@ -1,5 +1,8 @@
 import 'path_finder.dart';
 
+// TODO: This could be less.
+export 'path_finder.dart';
+
 class Inventory {}
 
 class Player {
@@ -55,29 +58,39 @@ class ItemPool {
   ];
 }
 
+typedef InitalizeMap = void Function(World world);
+
+void initSimpleMap(World w) {
+  w.addNode('A');
+  w.addNode('B');
+  w.addNode('C');
+  w.addNode('D');
+  w.addNode('E');
+  w.addNode('F');
+  w.addBiEdge('A', 'B', 1);
+  w.addBiEdge('A', 'C', 2);
+  w.addBiEdge('A', 'E', 2);
+  w.addBiEdge('A', 'D', 2);
+  w.addBiEdge('D', 'E', 1);
+  w.addBiEdge('A', 'F', 1, ItemType.RedKey);
+}
+
 class World {
-  World() {
-    addNode('A');
-    addNode('B');
-    addNode('C');
-    addNode('D');
-    addNode('E');
-    addNode('F');
-    addBiEdge('A', 'B', 1);
-    addBiEdge('A', 'C', 2);
-    addBiEdge('A', 'E', 2);
-    addBiEdge('A', 'D', 2);
-    addBiEdge('D', 'E', 1);
-    addBiEdge('A', 'F', 1, ItemType.RedKey);
+  World(InitalizeMap initMap) {
+    initMap(this);
     player = Player(node('A'));
     pathFinder = PathFinder(this);
+  }
+
+  factory World.simple() {
+    return World(initSimpleMap);
   }
 
   Map<String, Node> nodeByName = <String, Node>{};
   Player player;
   PathFinder pathFinder;
 
-  Iterable<Node> findPath(Node start, Node end) =>
+  MeasuredPath findPath(Node start, Node end) =>
       pathFinder.findPath(start, end);
 
   Node node(String name) => nodeByName[name];
@@ -85,6 +98,7 @@ class World {
   Iterable<Node> get nodes => nodeByName.values;
 
   void addNode(String name) {
+    assert(nodeByName[name] == null);
     nodeByName[name] = Node(name);
   }
 

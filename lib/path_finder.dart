@@ -37,6 +37,18 @@ class AStarGraph implements a_star.Graph<AStarNode> {
       node.node.neighbors.map(wrapNode);
 }
 
+class MeasuredPath {
+  MeasuredPath(this.nodes) {
+    cost = 0;
+    // This is silly, but it's hard to get the cost out of the A* we're using.
+    for (int x = 1; x < nodes.length; x++) {
+      cost += nodes[x - 1].edgeTo(nodes[x]).cost;
+    }
+  }
+  int cost;
+  final List<Node> nodes;
+}
+
 /// Hides the existance of AStar from the rest of this.
 class PathFinder {
   PathFinder(World world) {
@@ -49,6 +61,9 @@ class PathFinder {
   AStarNode wrapNode(Node node) => _graph.wrapNode(node);
   Node unwrapNode(AStarNode node) => _graph.unwrapNode(node);
 
-  Iterable<Node> findPath(Node start, Node end) =>
-      _aStar.findPathSync(wrapNode(start), wrapNode(end)).map(unwrapNode);
+  MeasuredPath findPath(Node start, Node end) {
+    final Iterable<Node> nodes =
+        _aStar.findPathSync(wrapNode(start), wrapNode(end)).map(unwrapNode);
+    return nodes.isNotEmpty ? MeasuredPath(nodes.toList()) : null;
+  }
 }

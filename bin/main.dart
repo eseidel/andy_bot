@@ -3,20 +3,15 @@ import 'package:andy_bot/graph.dart';
 class PrintPaths {
   PrintPaths();
 
-  World world = World();
+  World world = World.simple();
 
   void printPath(Node start, Node end) {
-    final List<Node> path = world.findPath(start, end).toList();
-    if (path.isEmpty) {
+    final MeasuredPath path = world.findPath(start, end);
+    if (path == null) {
       print('$end unreachable from $start');
       return;
     }
-    // This is silly, but it's hard to get the cost out of the A* we're using.
-    int cost = 0;
-    for (int x = 1; x < path.length; x++) {
-      cost += path[x - 1].edgeTo(path[x]).cost;
-    }
-    print(path.map((Node n) => n.name).join(' -> ') + ' $cost');
+    print(path.nodes.map((Node n) => n.name).join(' -> ') + ' ${path.cost}');
   }
 
   void printAllPossiblePaths() {
