@@ -11,6 +11,3 @@ A diagram attempting to describe the simplified second problem: https://docs.goo
 
 
 TODO
-* Add Items
-* Add Gates
-* Teach Pathing about unreachable states.

@@ -12,7 +12,10 @@ class AStarGraph implements a_star.Graph<AStarNode> {
           world.nodes,
           key: (dynamic n) => n.name,
           value: (dynamic n) => AStarNode(n),
-        );
+        ),
+        player = world.player;
+
+  final Player player; // For reachability
 
   final Map<String, AStarNode> _nodesByName;
 
@@ -33,8 +36,9 @@ class AStarGraph implements a_star.Graph<AStarNode> {
   }
 
   @override
-  Iterable<AStarNode> getNeighboursOf(AStarNode node) =>
-      node.node.neighbors.map(wrapNode);
+  Iterable<AStarNode> getNeighboursOf(AStarNode node) {
+    return node.node.reachableNeighbors(player).map(wrapNode);
+  }
 }
 
 class MeasuredPath {
