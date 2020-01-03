@@ -25,7 +25,7 @@ void main() {
       w.addNode('B');
       w.addNode('C');
       w.addBiEdge('A', 'B', 2);
-      w.addBiEdge('B', 'C', 3, Edge.itemRequired(SimpleItem.redKey));
+      w.addBiEdge('B', 'C', 3, ItemGate(SimpleItem.redKey));
       return w.node('A');
     });
     final Player player = world.player;

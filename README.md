@@ -18,5 +18,12 @@ TODO
 
 Strategy Thoughts
 * Use expected value / expected cost of a given route?
-* Look a fixed search distance ahead?  Or a search distance until a given EV?
+* Look a fixed search distance ahead?  Or a search distance until a given EV threshold?
 * Re-distribute expected value (and cost?) from unreachable nodes to keys (progression items)?
+
+Quirks of the real game
+* Flute adds a few connections in Light World
+* Mirror connects Dark to Light.
+* Mirror connects all dungeon nodes to start node.
+* Save and quit connects any node to unlocked starting nodes.
+

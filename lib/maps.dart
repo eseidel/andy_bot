@@ -5,6 +5,7 @@ import 'graph.dart';
 // https://github.com/google/built_value.dart/blob/master/example/lib/enums.dart
 class SimpleItem implements Item {
   const SimpleItem(this.id);
+  @override
   final int id;
 
   static const SimpleItem goal = SimpleItem(0);
@@ -45,7 +46,7 @@ Node buildSimpleMap(World w) {
   w.addBiEdge('A', 'E', 2);
   w.addBiEdge('A', 'D', 2);
   w.addBiEdge('D', 'E', 1);
-  w.addBiEdge('A', 'F', 1, Edge.itemRequired(SimpleItem.redKey));
+  w.addBiEdge('A', 'F', 1, ItemGate(SimpleItem.redKey));
   return w.node('A');
 }
 

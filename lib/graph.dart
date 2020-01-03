@@ -8,7 +8,9 @@ class Inventory {
   Set<Item> items = <Item>{};
 }
 
-abstract class Item {}
+abstract class Item {
+  int get id;
+}
 
 class Player {
   Player(this.world, Node location) {
@@ -46,13 +48,22 @@ class Player {
 }
 
 class Node {
-  Node(this.name, {this.item, this.id});
+  Node(this.name, {this.item, this.id}) {
+    // Assume constructor-specified items default to visible.
+    itemIsVisible = item != null;
+  }
 
   int id;
   final String name;
   List<Edge> _edges = <Edge>[];
   List<Node> _allNeighborsCache;
+  // TODO: Rename to make visibility more obvious.
   Item item;
+  bool itemIsVisible = false;
+
+  List<Edge> get edges => _edges;
+
+  Item get visibleItem => itemIsVisible ? item : null;
 
   void addEdge(Edge edge) {
     _allNeighborsCache = null;
@@ -81,18 +92,27 @@ class Node {
 
 typedef CanPass = bool Function(Player player);
 
+class ItemGate {
+  ItemGate(Item item) : requiredItems = <Item>[item];
+
+  List<Item> requiredItems;
+
+  bool canPass(Player player) =>
+      requiredItems.every((Item item) => player.hasItem(item));
+}
+
 class Edge {
-  Edge(this.start, this.end, [this.cost = 0, this.canPassFunc]);
+  Edge(this.start, this.end, [this.cost = 0, this.gate]);
   final Node start;
   final Node end;
   final int cost;
-  final CanPass canPassFunc;
+  final ItemGate gate;
 
   static CanPass itemRequired(Item item) {
     return (Player player) => player.hasItem(item);
   }
 
-  bool canPass(Player player) => canPassFunc == null || canPassFunc(player);
+  bool canPass(Player player) => gate == null || gate.canPass(player);
 
   @override
   String toString() => 'Edge($cost) to $end';
@@ -170,10 +190,10 @@ class World {
     nodeByName[name] = Node(name, item: item, id: _nextNodeId++);
   }
 
-  void addBiEdge(String aName, String bName, int cost, [CanPass canPass]) {
+  void addBiEdge(String aName, String bName, int cost, [ItemGate gate]) {
     final Node a = node(aName);
     final Node b = node(bName);
-    a.addEdge(Edge(a, b, cost, canPass));
-    b.addEdge(Edge(b, a, cost, canPass));
+    a.addEdge(Edge(a, b, cost, gate));
+    b.addEdge(Edge(b, a, cost, gate));
   }
 }
