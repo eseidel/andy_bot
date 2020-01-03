@@ -2,54 +2,42 @@ import 'dart:math';
 import 'package:andy_bot/graph.dart';
 import 'package:andy_bot/strategy.dart';
 
-typedef WinCondition = bool Function(Player player);
-
-class PrintPaths {
-  PrintPaths();
-
-  World world = World.simple();
-
-  void printPath(Node start, Node end) {
-    final MeasuredPath path = world.findPath(start, end);
-    if (path == null) {
-      print('$end unreachable from $start');
-      return;
+class CompareStrategies {
+  MeasuredPath runOnce(World world, Strategy strategy) {
+    final Player player = world.player;
+    // TODO: Use package:logging to have levels.
+    // print('start ${player.location} take ${player.location.item}');
+    player.takeItem();
+    // TODO: Prevent infinite loops.
+    while (!world.winCondition(player)) {
+      final Node goal = strategy.computeNextMove(player);
+      // print('-> $goal, take ${goal.item}');
+      player.moveTo(goal);
     }
-    print(path.nodes.map((Node n) => n.name).join(' -> ') + ' ${path.cost}');
-  }
-
-  void printAllPossiblePaths() {
-    final Node start = world.player.location;
-    for (Node end in world.nodes) {
-      printPath(start, end);
-    }
+    // print('${strategy.runtimeType} traveled ${player.traveledPath}');
+    return player.traveledPath;
   }
 
   void main() {
     // Define a set of strategies
-    final List<Strategy> strategies = <Strategy>[
-      RandomWalk(Random(0)),
-      Greedy(),
-    ];
+    final Strategy random = RandomWalk(Random(0));
+    final Strategy greedy = Greedy();
     // Run simulations with those strategies
-    final Strategy strategy = strategies[0];
-    final WinCondition winCondition =
-        (Player player) => player.hasItem(Item.goal);
-    final World world = World.simple(1);
-    final Player player = world.player;
-    print('start ${player.location} take ${player.location.item}');
-    player.takeItem();
-    // TODO: Prevent infinite loops.
-    while (!winCondition(player)) {
-      final Node goal = strategy.computeNextMove(player);
-      print('-> $goal, take ${goal.item}');
-      player.moveTo(goal);
+    const int runCount = 100;
+    int totalDiff = 0;
+    for (int i = 0; i < runCount; i++) {
+      // Using the index as the world seed for consistency.
+      final MeasuredPath randomPath = runOnce(World.simple(i), random);
+      final MeasuredPath greedyPath = runOnce(World.simple(i), greedy);
+      final int diff = randomPath.cost - greedyPath.cost;
+      totalDiff += diff;
     }
-    print('Traveled: ${player.traveledPath}');
-    // Compare average times.
+    final double averageDiff = totalDiff / runCount;
+    print(
+        'Greedy averages $averageDiff better than random over $runCount runs.');
   }
 }
 
 void main() {
-  PrintPaths().main();
+  CompareStrategies().main();
 }

@@ -11,3 +11,12 @@ A diagram attempting to describe the simplified second problem: https://docs.goo
 
 
 TODO
+* Need a strategy which is aware of future gate openings.
+* Make a slightly more realistic map.
+* Add a "restart" edge to all nodes.
+
+
+Strategy Thoughts
+* Use expected value / expected cost of a given route?
+* Look a fixed search distance ahead?  Or a search distance until a given EV?
+* Re-distribute expected value (and cost?) from unreachable nodes to keys (progression items)?

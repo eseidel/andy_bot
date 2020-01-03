@@ -30,6 +30,7 @@ class AStarGraph implements a_star.Graph<AStarNode> {
 
   @override
   int getHeuristicDistance(AStarNode tile, AStarNode goal) {
+    // TODO: Improving the A* heuristic would make it faster.
     return getDistance(tile, goal) ?? 0;
     // if h(n) is 0 then  A* turns into Dijkstra’s Algorithm, and is
     // guaranteed to find a shortest path (slowly).

@@ -38,12 +38,15 @@ class Player {
     takeItem();
   }
 
+  MeasuredPath findPathTo(Node goal) => world.findPath(location, goal);
+
   Set<Node> reachableNodes() => world.reachableNodes(this);
 }
 
 class Node {
-  Node(this.name, [this.item]);
+  Node(this.name, {this.item, this.id});
 
+  int id;
   final String name;
   List<Edge> _edges = <Edge>[];
   List<Node> _allNeighborsCache;
@@ -56,6 +59,8 @@ class Node {
 
   @override
   String toString() => name;
+
+  bool get hasItem => item != null;
 
   Edge edgeTo(Node end) =>
       _edges.firstWhere((Edge e) => e.end == end, orElse: () => null);
@@ -75,10 +80,11 @@ class Node {
 typedef CanPass = bool Function(Player player);
 
 class Edge {
-  Edge(this.end, [this.cost = 0, this.canPassFunc]);
+  Edge(this.start, this.end, [this.cost = 0, this.canPassFunc]);
+  final Node start;
+  final Node end;
   final int cost;
   final CanPass canPassFunc;
-  final Node end;
 
   static CanPass itemRequired(Item item) {
     return (Player player) => player.hasItem(item);
@@ -142,6 +148,8 @@ Node buildSimpleMap(World w) {
   return w.node('A');
 }
 
+typedef WinCondition = bool Function(Player player);
+
 class World {
   World(BuildMap buildMap) {
     final Node startLocation = buildMap(this);
@@ -152,12 +160,16 @@ class World {
   factory World.simple([int seed]) {
     final World world = World(buildSimpleMap);
     world.distributeItems(SimpleItemPool(), seed);
+    world.winCondition = (Player player) => player.hasItem(Item.goal);
     return world;
   }
 
   Map<String, Node> nodeByName = <String, Node>{};
   Player player;
   PathFinder pathFinder;
+  WinCondition winCondition;
+  // all-pairs-shortest-path can be faster if nodes have int ids.
+  int _nextNodeId = 0;
 
   void distributeItems(ItemPool pool, int seed) {
     final Random random = Random(seed);
@@ -191,13 +203,14 @@ class World {
 
   void addNode(String name, [Item item]) {
     assert(nodeByName[name] == null);
-    nodeByName[name] = Node(name, item);
+    nodeByName[name] = Node(name, item: item, id: _nextNodeId++);
   }
 
-  void addBiEdge(String startName, String endName, int cost,
-      [CanPass canPass]) {
-    node(startName).addEdge(Edge(node(endName), cost, canPass));
-    node(endName).addEdge(Edge(node(startName), cost, canPass));
+  void addBiEdge(String aName, String bName, int cost, [CanPass canPass]) {
+    final Node a = node(aName);
+    final Node b = node(bName);
+    a.addEdge(Edge(a, b, cost, canPass));
+    b.addEdge(Edge(b, a, cost, canPass));
   }
 }
 
