@@ -4,25 +4,47 @@ import 'path_finder.dart';
 export 'path_finder.dart';
 
 class Inventory {
-  Set<ItemType> items = <ItemType>{};
+  Set<Item> items = <Item>{};
 }
 
 class Player {
-  Player(this.location);
+  Player(this.world, Node location) {
+    traveledPath = MeasuredPath(<Node>[location]);
+    _takeItem(location);
+  }
 
-  void addItem(ItemType type) => inventory.items.add(type);
-  bool hasItem(ItemType type) => inventory.items.contains(type);
+  void addItem(Item item) => inventory.items.add(item);
+  bool hasItem(Item item) => inventory.items.contains(item);
 
-  Node location;
+  World world;
+  MeasuredPath traveledPath;
+  Node get location => traveledPath.nodes.last;
   Inventory inventory = Inventory();
+
+  void _takeItem(Node goal) {
+    if (goal.item != null) {
+      addItem(goal.item);
+    }
+    goal.item = null;
+  }
+
+  void moveTo(Node goal) {
+    final MeasuredPath path = world.findPath(location, goal);
+    if (path == null) {
+      throw ArgumentError('goal not reachable');
+    }
+    traveledPath += path;
+    _takeItem(goal);
+  }
 }
 
 class Node {
-  Node(this.name);
+  Node(this.name, [this.item]);
 
   final String name;
   List<Edge> _edges = <Edge>[];
   List<Node> _allNeighborsCache;
+  Item item;
 
   void addEdge(Edge edge) {
     _allNeighborsCache = null;
@@ -55,8 +77,8 @@ class Edge {
   final CanPass canPassFunc;
   final Node end;
 
-  static CanPass itemRequired(ItemType itemType) {
-    return (Player player) => player.hasItem(itemType);
+  static CanPass itemRequired(Item item) {
+    return (Player player) => player.hasItem(item);
   }
 
   bool canPass(Player player) => canPassFunc == null || canPassFunc(player);
@@ -65,21 +87,16 @@ class Edge {
   String toString() => 'Edge($cost) to $end';
 }
 
-enum ItemType {
+enum Item {
   blueKey, // Goal
   redKey,
   junk,
 }
 
-class Item {
-  Item(this.type);
-  ItemType type;
-}
-
 class ItemPool {
   List<Item> requiredItems = <Item>[
-    Item(ItemType.blueKey),
-    Item(ItemType.redKey),
+    Item.blueKey,
+    Item.redKey,
   ];
 }
 
@@ -97,14 +114,14 @@ Node initSimpleMap(World w) {
   w.addBiEdge('A', 'E', 2);
   w.addBiEdge('A', 'D', 2);
   w.addBiEdge('D', 'E', 1);
-  w.addBiEdge('A', 'F', 1, Edge.itemRequired(ItemType.redKey));
+  w.addBiEdge('A', 'F', 1, Edge.itemRequired(Item.redKey));
   return w.node('A');
 }
 
 class World {
   World(InitalizeMap initMap) {
     final Node startLocation = initMap(this);
-    player = Player(startLocation);
+    player = Player(this, startLocation);
     pathFinder = PathFinder(this);
   }
 
@@ -138,9 +155,9 @@ class World {
     return reachable;
   }
 
-  void addNode(String name) {
+  void addNode(String name, [Item item]) {
     assert(nodeByName[name] == null);
-    nodeByName[name] = Node(name);
+    nodeByName[name] = Node(name, item);
   }
 
   void addBiEdge(String startName, String endName, int cost,

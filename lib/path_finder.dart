@@ -42,15 +42,25 @@ class AStarGraph implements a_star.Graph<AStarNode> {
 }
 
 class MeasuredPath {
-  MeasuredPath(this.nodes) {
-    cost = 0;
-    // This is silly, but it's hard to get the cost out of the A* we're using.
-    for (int x = 1; x < nodes.length; x++) {
-      cost += nodes[x - 1].edgeTo(nodes[x]).cost;
+  MeasuredPath(this.nodes, [this.cost]) {
+    if (cost == null) {
+      cost = 0;
+      // This is silly, but it's hard to get the cost out of the A* we're using.
+      for (int x = 1; x < nodes.length; x++) {
+        cost += nodes[x - 1].edgeTo(nodes[x]).cost;
+      }
     }
   }
   int cost;
   final List<Node> nodes;
+
+  // Maybe these shouldn't be modifiable?
+  MeasuredPath operator +(MeasuredPath other) {
+    if (nodes.last != other.nodes.first) {
+      throw ArgumentError('other path must start where this path ends');
+    }
+    return MeasuredPath(nodes + other.nodes.sublist(1), cost + other.cost);
+  }
 }
 
 /// Hides the existance of AStar from the rest of this.
