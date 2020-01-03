@@ -54,6 +54,9 @@ class MeasuredPath {
   int cost;
   final List<Node> nodes;
 
+  @override
+  String toString() => nodes.map((Node n) => n.name).join(' -> ') + ' ($cost)';
+
   // Maybe these shouldn't be modifiable?
   MeasuredPath operator +(MeasuredPath other) {
     if (nodes.last != other.nodes.first) {

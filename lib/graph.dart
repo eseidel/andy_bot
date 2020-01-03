@@ -1,6 +1,7 @@
+import 'dart:math';
 import 'path_finder.dart';
 
-// TODO: This could be less.
+// TODO: Export only the used classes.
 export 'path_finder.dart';
 
 class Inventory {
@@ -10,7 +11,7 @@ class Inventory {
 class Player {
   Player(this.world, Node location) {
     traveledPath = MeasuredPath(<Node>[location]);
-    _takeItem(location);
+    takeItem();
   }
 
   void addItem(Item item) => inventory.items.add(item);
@@ -21,11 +22,11 @@ class Player {
   Node get location => traveledPath.nodes.last;
   Inventory inventory = Inventory();
 
-  void _takeItem(Node goal) {
-    if (goal.item != null) {
-      addItem(goal.item);
+  void takeItem() {
+    if (location.item != null) {
+      addItem(location.item);
     }
-    goal.item = null;
+    location.item = null;
   }
 
   void moveTo(Node goal) {
@@ -34,8 +35,10 @@ class Player {
       throw ArgumentError('goal not reachable');
     }
     traveledPath += path;
-    _takeItem(goal);
+    takeItem();
   }
+
+  Set<Node> reachableNodes() => world.reachableNodes(this);
 }
 
 class Node {
@@ -88,21 +91,42 @@ class Edge {
 }
 
 enum Item {
-  blueKey, // Goal
+  goal,
   redKey,
   junk,
 }
 
-class ItemPool {
-  List<Item> requiredItems = <Item>[
-    Item.blueKey,
-    Item.redKey,
-  ];
+abstract class ItemPool {
+  List<Item> shuffledItems(Random random, int count);
 }
 
-typedef InitalizeMap = Node Function(World world);
+class SimpleItemPool implements ItemPool {
+  List<Item> requiredItems = <Item>[
+    Item.goal,
+    Item.redKey,
+  ];
 
-Node initSimpleMap(World w) {
+  List<Item> fillItems = <Item>[
+    Item.junk,
+  ];
+
+  @override
+  List<Item> shuffledItems(Random random, int count) {
+    final List<Item> items = requiredItems;
+    final int fillCount = count - items.length;
+    if (fillCount < 0)
+      throw ArgumentError('Not enough slots for required items.');
+    items.addAll(List<Item>.generate(fillCount, (int _) {
+      return fillItems[random.nextInt(fillItems.length)];
+    }));
+    items.shuffle(random);
+    return items;
+  }
+}
+
+typedef BuildMap = Node Function(World world);
+
+Node buildSimpleMap(World w) {
   w.addNode('A');
   w.addNode('B');
   w.addNode('C');
@@ -119,19 +143,29 @@ Node initSimpleMap(World w) {
 }
 
 class World {
-  World(InitalizeMap initMap) {
-    final Node startLocation = initMap(this);
+  World(BuildMap buildMap) {
+    final Node startLocation = buildMap(this);
     player = Player(this, startLocation);
     pathFinder = PathFinder(this);
   }
 
-  factory World.simple() {
-    return World(initSimpleMap);
+  factory World.simple([int seed]) {
+    final World world = World(buildSimpleMap);
+    world.distributeItems(SimpleItemPool(), seed);
+    return world;
   }
 
   Map<String, Node> nodeByName = <String, Node>{};
   Player player;
   PathFinder pathFinder;
+
+  void distributeItems(ItemPool pool, int seed) {
+    final Random random = Random(seed);
+    final List<Item> items = pool.shuffledItems(random, nodes.length);
+    for (Node node in nodes) {
+      node.item = items.removeLast();
+    }
+  }
 
   MeasuredPath findPath(Node start, Node end) =>
       pathFinder.findPath(start, end);
@@ -149,7 +183,7 @@ class World {
       addReachable(reachable, node, player);
   }
 
-  Set<Node> reachableNodes() {
+  Set<Node> reachableNodes(Player player) {
     final Set<Node> reachable = <Node>{};
     addReachable(reachable, player.location, player);
     return reachable;

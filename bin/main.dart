@@ -1,4 +1,8 @@
+import 'dart:math';
 import 'package:andy_bot/graph.dart';
+import 'package:andy_bot/strategy.dart';
+
+typedef WinCondition = bool Function(Player player);
 
 class PrintPaths {
   PrintPaths();
@@ -22,11 +26,27 @@ class PrintPaths {
   }
 
   void main() {
-    print('$world');
-    print('player at ${world.player.location}');
-    printAllPossiblePaths();
-    world.player.location = world.node('C');
-    printAllPossiblePaths();
+    // Define a set of strategies
+    final List<Strategy> strategies = <Strategy>[
+      RandomWalk(Random(0)),
+      Greedy(),
+    ];
+    // Run simulations with those strategies
+    final Strategy strategy = strategies[0];
+    final WinCondition winCondition =
+        (Player player) => player.hasItem(Item.goal);
+    final World world = World.simple(1);
+    final Player player = world.player;
+    print('start ${player.location} take ${player.location.item}');
+    player.takeItem();
+    // TODO: Prevent infinite loops.
+    while (!winCondition(player)) {
+      final Node goal = strategy.computeNextMove(player);
+      print('-> $goal, take ${goal.item}');
+      player.moveTo(goal);
+    }
+    print('Traveled: ${player.traveledPath}');
+    // Compare average times.
   }
 }
 
