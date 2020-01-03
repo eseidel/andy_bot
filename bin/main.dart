@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:andy_bot/graph.dart';
 import 'package:andy_bot/strategy.dart';
+import 'package:andy_bot/maps.dart';
 
 class CompareStrategies {
   MeasuredPath runOnce(World world, Strategy strategy) {
@@ -27,8 +28,8 @@ class CompareStrategies {
     int totalDiff = 0;
     for (int i = 0; i < runCount; i++) {
       // Using the index as the world seed for consistency.
-      final MeasuredPath randomPath = runOnce(World.simple(i), random);
-      final MeasuredPath greedyPath = runOnce(World.simple(i), greedy);
+      final MeasuredPath randomPath = runOnce(createSimpleWorld(i), random);
+      final MeasuredPath greedyPath = runOnce(createSimpleWorld(i), greedy);
       final int diff = randomPath.cost - greedyPath.cost;
       totalDiff += diff;
     }

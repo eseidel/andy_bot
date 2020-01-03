@@ -7,7 +7,7 @@ There are separate problems here.
 
 I'm looking at the second first.
 
-A diagram attempting to describe the simplified second problem: https://docs.google.com/drawings/d/1YJdXb9xBr0QRxe7666wHTwRLNNWSxriLlLl-JbAkqUg/edit?folder=0AFC4tS7Ao1fIUk9PVA
+A diagram of the first simplified second problem I'm tackling: https://docs.google.com/drawings/d/1YJdXb9xBr0QRxe7666wHTwRLNNWSxriLlLl-JbAkqUg/edit?folder=0AFC4tS7Ao1fIUk9PVA
 
 
 TODO

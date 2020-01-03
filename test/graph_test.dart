@@ -1,3 +1,4 @@
+import 'package:andy_bot/maps.dart';
 import 'package:test/test.dart';
 import 'package:andy_bot/graph.dart';
 
@@ -24,7 +25,7 @@ void main() {
       w.addNode('B');
       w.addNode('C');
       w.addBiEdge('A', 'B', 2);
-      w.addBiEdge('B', 'C', 3, Edge.itemRequired(Item.redKey));
+      w.addBiEdge('B', 'C', 3, Edge.itemRequired(SimpleItem.redKey));
       return w.node('A');
     });
     final Player player = world.player;
@@ -35,7 +36,7 @@ void main() {
     expect(reachable, containsAll(<Node>[node('A'), node('B')]));
     expect(world.findPath(node('A'), node('C')), isNull);
 
-    player.addItem(Item.redKey);
+    player.addItem(SimpleItem.redKey);
     final Set<Node> reachableWithKey = player.reachableNodes();
     expect(reachableWithKey.length, equals(3));
     expect(
@@ -44,8 +45,8 @@ void main() {
   });
   test('Movement', () {
     final World world = World((World w) {
-      w.addNode('A', Item.goal);
-      w.addNode('B', Item.redKey);
+      w.addNode('A', SimpleItem.goal);
+      w.addNode('B', SimpleItem.redKey);
       w.addBiEdge('A', 'B', 2);
       return w.node('A');
     });
@@ -53,11 +54,11 @@ void main() {
     Node node(String name) => world.node(name);
 
     expect(player.traveledPath.cost, equals(0));
-    expect(player.hasItem(Item.goal), isTrue);
+    expect(player.hasItem(SimpleItem.goal), isTrue);
 
     player.moveTo(node('B'));
     expect(player.traveledPath.cost, equals(2));
-    expect(player.hasItem(Item.redKey), isTrue);
+    expect(player.hasItem(SimpleItem.redKey), isTrue);
     expect(node('B').item, isNull);
 
     player.moveTo(node('A'));
@@ -75,7 +76,13 @@ void main() {
         equals(List<Item>.filled(4, null)));
     // Should this be a test-specific fixure instead of SimpleItemPool?
     world.distributeItems(SimpleItemPool(), 0);
-    expect(world.nodes.map((Node n) => n.item),
-        unorderedEquals(<Item>[Item.redKey, Item.goal, Item.junk, Item.junk]));
+    expect(
+        world.nodes.map((Node n) => n.item),
+        unorderedEquals(<Item>[
+          SimpleItem.redKey,
+          SimpleItem.goal,
+          SimpleItem.junk,
+          SimpleItem.junk
+        ]));
   });
 }

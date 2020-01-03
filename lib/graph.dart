@@ -8,6 +8,8 @@ class Inventory {
   Set<Item> items = <Item>{};
 }
 
+abstract class Item {}
+
 class Player {
   Player(this.world, Node location) {
     traveledPath = MeasuredPath(<Node>[location]);
@@ -96,57 +98,26 @@ class Edge {
   String toString() => 'Edge($cost) to $end';
 }
 
-enum Item {
-  goal,
-  redKey,
-  junk,
+T pickOne<T>(Random random, List<T> list) {
+  return list[random.nextInt(list.length)];
 }
 
 abstract class ItemPool {
-  List<Item> shuffledItems(Random random, int count);
-}
+  List<Item> get requiredItems;
+  Iterable<Item> generateFillerItems(Random random, int count);
 
-class SimpleItemPool implements ItemPool {
-  List<Item> requiredItems = <Item>[
-    Item.goal,
-    Item.redKey,
-  ];
-
-  List<Item> fillItems = <Item>[
-    Item.junk,
-  ];
-
-  @override
   List<Item> shuffledItems(Random random, int count) {
     final List<Item> items = requiredItems;
     final int fillCount = count - items.length;
     if (fillCount < 0)
       throw ArgumentError('Not enough slots for required items.');
-    items.addAll(List<Item>.generate(fillCount, (int _) {
-      return fillItems[random.nextInt(fillItems.length)];
-    }));
+    items.addAll(generateFillerItems(random, fillCount));
     items.shuffle(random);
     return items;
   }
 }
 
 typedef BuildMap = Node Function(World world);
-
-Node buildSimpleMap(World w) {
-  w.addNode('A');
-  w.addNode('B');
-  w.addNode('C');
-  w.addNode('D');
-  w.addNode('E');
-  w.addNode('F');
-  w.addBiEdge('A', 'B', 1);
-  w.addBiEdge('A', 'C', 2);
-  w.addBiEdge('A', 'E', 2);
-  w.addBiEdge('A', 'D', 2);
-  w.addBiEdge('D', 'E', 1);
-  w.addBiEdge('A', 'F', 1, Edge.itemRequired(Item.redKey));
-  return w.node('A');
-}
 
 typedef WinCondition = bool Function(Player player);
 
@@ -155,13 +126,6 @@ class World {
     final Node startLocation = buildMap(this);
     player = Player(this, startLocation);
     pathFinder = PathFinder(this);
-  }
-
-  factory World.simple([int seed]) {
-    final World world = World(buildSimpleMap);
-    world.distributeItems(SimpleItemPool(), seed);
-    world.winCondition = (Player player) => player.hasItem(Item.goal);
-    return world;
   }
 
   Map<String, Node> nodeByName = <String, Node>{};
@@ -213,5 +177,3 @@ class World {
     b.addEdge(Edge(b, a, cost, canPass));
   }
 }
-
-// https://docs.google.com/drawings/d/1YJdXb9xBr0QRxe7666wHTwRLNNWSxriLlLl-JbAkqUg/edit?folder=0AFC4tS7Ao1fIUk9PVA
